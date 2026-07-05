@@ -31,7 +31,10 @@ export const verifyOtpController = async (
     return;
   }
 
-  const result = peekOtp(email.trim().toLowerCase(), otp.toString().trim());
+  const result = await peekOtp(
+    email.trim().toLowerCase(),
+    otp.toString().trim(),
+  );
 
   if (!result) {
     res.status(400).json({ message: "Invalid email or OTP." });

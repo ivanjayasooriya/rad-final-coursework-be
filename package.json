@@ -27,6 +27,7 @@
   },
   "dependencies": {
     "@google/genai": "^2.6.0",
+    "@upstash/redis": "^1.38.0",
     "axios": "^1.16.1",
     "bcryptjs": "^3.0.3",
     "cloudinary": "^2.10.0",

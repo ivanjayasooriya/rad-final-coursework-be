@@ -155,7 +155,10 @@ export const resetPassword = async (req: Request, res: Response) => {
         .json({ message: "Email, OTP, and new password are required" });
     }
 
-    const result = verifyOtp(email.trim().toLowerCase(), otp.toString().trim());
+    const result = await verifyOtp(
+      email.trim().toLowerCase(),
+      otp.toString().trim(),
+    );
 
     if (!result.success) {
       return res.status(400).json({ message: result.message });
