@@ -2,6 +2,9 @@ import { Response } from "express";
 import { UserModel } from "../models/userModel";
 import { AuthRequest } from "../middleware/auth";
 import cloudinary from "../config/cloudinary";
+import mongoose from "mongoose";
+import { PostModel } from "../models/postModel";
+import { BookmarkModel } from "../models/boomarkModel";
 
 // Update user
 export const updateUser = async (req: AuthRequest, res: Response) => {
@@ -28,12 +31,24 @@ export const updateUser = async (req: AuthRequest, res: Response) => {
 
 // Delete account
 export const deleteAccount = async (req: AuthRequest, res: Response) => {
+  const session = await mongoose.startSession();
+
   try {
     const userId = req.user.sub;
-    const user = await UserModel.findByIdAndDelete(userId);
-    res.status(200).json({ message: "Account deleted successfully" });
+
+    await session.withTransaction(async () => {
+      await UserModel.findByIdAndDelete(userId, { session });
+      await PostModel.deleteMany({ author: userId }, { session });
+      await BookmarkModel.deleteMany({ user: userId }, { session });
+      
+      res.status(200).json({ message: "Account deleted successfully" });
+    });
+
+    // const user = await UserModel.findByIdAndDelete(userId);
   } catch (error) {
     res.status(500).json({ message: "Error deleting account" });
+  } finally {
+    session.endSession();
   }
 };
 

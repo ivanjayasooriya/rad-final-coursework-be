@@ -4,15 +4,28 @@ import { UserModel, UserRole } from "../models/userModel";
 import { PostModel, PostStatus } from "../models/postModel";
 import { sendEmailToUser } from "../service/emailService";
 import { BookmarkModel } from "../models/boomarkModel";
+import mongoose from "mongoose";
 
 // Delete post
 export const deletePost = async (req: AuthRequest, res: Response) => {
+  const session = await mongoose.startSession();
+  
   try {
     const postId = req.params.id;
-    const deletedPost = await PostModel.findByIdAndDelete(postId);
-    res.status(200).json({ message: "Post deleted successfully" });
+
+    await session.withTransaction(async () => {
+      await PostModel.findByIdAndDelete(postId, { session });
+      await BookmarkModel.deleteMany({ post: postId }, { session });
+      
+      res.status(200).json({ message: "Post deleted successfully" });
+    });
+
+    // const deletedPost = await PostModel.findByIdAndDelete(postId);
   } catch (error) {
     res.status(500).json({ message: "Error deleting post" });
+  
+  } finally {
+    session.endSession();
   }
 };
 
@@ -44,11 +57,19 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
 
 // Delete user
 export const deleteUser = async (req: AuthRequest, res: Response) => {
+  const session = await mongoose.startSession();
+  
   try {
-    const user = await UserModel.findByIdAndDelete(req.params.id);
-    res.status(200).json({ message: "User deleted successfully" });
+    await session.withTransaction(async () => {
+      await UserModel.findByIdAndDelete(req.params.id, { session });
+      await PostModel.deleteMany({ author: req.params.id }, { session });
+      await BookmarkModel.deleteMany({ user: req.params.id }, { session });
+      res.status(200).json({ message: "User deleted successfully" });
+    });
   } catch (error) {
     res.status(500).json({ message: "Error deleting user" });
+  } finally {
+    session.endSession();
   }
 };
 
