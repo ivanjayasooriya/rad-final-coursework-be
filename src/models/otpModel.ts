@@ -1,5 +1,6 @@
 import { Document, model, Schema } from "mongoose";
 
+// OTP interface
 export interface IOtp extends Document {
   email: string;
   otp: string;
@@ -7,6 +8,7 @@ export interface IOtp extends Document {
   attempts: number;
 }
 
+// OTP schema
 const otpSchema = new Schema<IOtp>(
   {
     email: { type: String, required: true, unique: true },
